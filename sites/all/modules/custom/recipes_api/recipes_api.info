@@ -1,0 +1,7 @@
+name = Recipes API
+description = A super awesome API for sharing plant based recipes, most of which I stole from Minimalist Baker
+core = 7.x
+
+dependencies[] = restful
+
+registry_autoload[]= PSR-4
