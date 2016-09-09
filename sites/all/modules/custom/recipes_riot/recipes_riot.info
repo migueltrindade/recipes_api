@@ -1,0 +1,7 @@
+name = Recipes Front End with Riot
+description = A super awesome front end with riot for sharing plant based recipes, most of which I stole from Minimalist Baker
+core = 7.x
+version = 7.x.1.0
+dependencies[] = restful
+dependencies[] = riot_tags
+registry_autoload[] = PSR-4

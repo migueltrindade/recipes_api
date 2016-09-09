@@ -1,0 +1,5 @@
+RecipesSearch:
+  label: Recipes Search
+  class: Drupal\recipes_riot\Plugin\RiotTag\RecipesSearch
+  compiledTagPath: tags/recipes_search/build/recipes_search.js
+  htmlTagName: 'recipes-search'
