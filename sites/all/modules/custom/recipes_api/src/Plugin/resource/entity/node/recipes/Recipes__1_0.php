@@ -27,5 +27,25 @@ use Drupal\restful\Plugin\resource\ResourceNode;
  */
 
 class Recipes__1_0 extends ResourceNode {
+/*
+ * {@inheritdoc}
+ */
+    protected function publicFields()
+    {
+        $public_fields = parent::publicFields();
+
+        $public_fields['name'] = $public_fields['label'];
+        unset($public_fields['label']);
+        $public_fields['description'] = array(
+            'property' => 'body',
+            'sub_property' => 'value',
+            'process_callbacks' => array('strip_tags'),
+        );
+        $public_fields['image'] = array (
+            'property' => 'field_image',
+        );
+
+        return $public_fields;
+    }
 
 }
