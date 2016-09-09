@@ -1,0 +1,4 @@
+name = RiotNotifyJS
+description = Provides notificaitons for Riot tags.
+core = 7.x
+dependencies[] = riot_notifyjs

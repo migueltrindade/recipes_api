@@ -1,0 +1,88 @@
+@import "tag-base";
+
+:scope {
+	display:block;
+	position:relative;
+	
+	ul {
+		@include clearfix();
+		list-style:none;
+		margin-left:0;
+		margin-bottom:0;
+	}
+	
+	li {
+		@include grid(4);
+		@include min(both);
+		text-align:center;
+		list-style:none;
+		margin-left:0;
+
+		a {
+			display:block;
+			height:44px;
+			background:$medium-gray;
+			color:$white !important;
+			line-height:44px;
+			position:relative;
+
+			&:hover, &:active {
+				text-decoration:none;
+				background-color:darken($medium-gray, 12%);
+			}
+
+			i {
+				display:inline-block;
+				width:18px;
+				height:20px;
+				margin-right:8px;
+				margin-bottom:-3px;
+			}
+		}
+
+		&.toggle-list-active {
+			a {
+				i {
+					background:url("/sites/all/modules/bluetent/riot_solr/images/icon-list-white.svg") center no-repeat;
+				}
+			}
+		}
+		&.toggle-both-active {
+			a {
+				border-left:solid 1px $white;
+
+				i {
+					background:url("/sites/all/modules/bluetent/riot_solr/images/icon-splitview-white.svg") center no-repeat;
+				}
+			}
+
+			&.active {
+				a {
+					border-left:0;
+				}
+			}
+		}
+
+		&.toggle-list-active.active + .toggle-both-active {
+			a {
+				border-right:solid 1px $white;
+				border-left:0;
+			}
+		}
+
+		&.toggle-map-active {
+			a {
+
+				i {
+					background:url("/sites/all/modules/bluetent/riot_solr/images/icon-map-white.svg") center no-repeat;
+					margin-right:4px;
+				}
+			}
+		}
+		&.active {
+			a {
+				background:$dark-gray;
+			}
+		}
+	}
+}

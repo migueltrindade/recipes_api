@@ -1,0 +1,7 @@
+name = RiotJS Tags
+description = Provides a Plugin architecture for exposing RiotJS tags to Drupal.
+core = 7.x
+dependencies[] = plug
+dependencies[] = ctools
+dependencies[] = libraries
+registry_autoload[] = PSR-4

@@ -1,0 +1,5 @@
+RiotTagsClassToggle:
+  label: RiotJS Tag Class Toggler
+  compiledTagPath: tags/riot_tags_class_toggle/build/riot_tags_class_toggle.js
+  htmlTagName: 'riot-tags-class-toggle'
+  class: Drupal\riot_tags\Plugin\RiotTag\RiotTagsClassToggle

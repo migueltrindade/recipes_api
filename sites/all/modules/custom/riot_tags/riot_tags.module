@@ -1,0 +1,296 @@
+<?php
+/**
+ * This module provides a Plugin for rendering RiotJS tags in
+ * a simple, consistent manner. This module provides no UI. But defining a tag
+ * can be as simple as extending the RiotTag class and dropping a .yml
+ * file in the root of your module.
+ */
+
+/**
+ * Implements hook_block_configure
+ */
+function riot_tags_block_configure($delta = '') {
+  $form = array();
+  $tvar = $delta . '_show_title';
+  $form['node_recent_block_count'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show Title'),
+    '#default_value' => variable_get($tvar, false),
+    '#description' => t('Check to show the optionset name as the block title.'),
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_block_info.  Provides blocks for instances of riot_tag_optionset.
+ */
+function riot_tags_block_info() {
+  ctools_include('export');
+  $optsets = ctools_export_crud_load_all('riot_tags_optionset');
+  foreach($optsets as $osid => $os) {
+    $blocks[$osid] = array(
+      'info' => t('Riot Tag Optionset: !title (@id)', array('!title' => t($os->title), '@id' => $osid))
+    );
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view.  Provides blocks for instances of riot_tag_optionset.
+ */
+function riot_tags_block_view($delta = '') {
+  $block = array();
+  $tvar = $delta . '_show_title';
+  // Deltas are optionset IDs.  Load and render
+  $os = ctools_export_crud_load('riot_tags_optionset', $delta);
+  if($os) {
+    $block['subject'] = variable_get($tvar, false) ? t($os->title) : NULL;
+    $block['content'] = array(
+      '#theme' => 'riot_tag',
+      '#optionset' => $os->name
+    );
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function riot_tags_ctools_plugin_api($owner, $api) {
+  if ($owner == 'riot_tags' && $api == 'riot_tags_default_optionsets') {
+    return array('version' => 1);
+  }
+}
+
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function riot_tags_ctools_plugin_directory($module, $type) {
+  if ($type =='export_ui') {
+    return 'plugins/export_ui';
+  }
+}
+
+function riot_tags_field_extra_fields_alter(&$info) {
+  ctools_include('export');
+  $plugins = ctools_export_crud_load_all('riot_tags_optionset');
+  foreach($plugins as $pi) {
+    $ea = $pi->options[$pi->tag_plugin]['entity_attach'];
+    if($ea) {
+      $display = array(
+        'label' => t('RiotJS Tags: @title', array('@title' => t($pi->title))),
+        'weight' => 0,
+      );
+      foreach($info[$ea] as $bundle => $bfields) {
+        $info[$ea][$bundle]['display']['riot_tags_' . $pi->name] = $display;
+      }
+      if($ea == 'rc_core_item') {
+        foreach(_rc_core_items_supported_types() as $tkey => $tinfo) {
+          if(variable_get('rc_core_'.$tinfo['settings_key'].'_extra_fields', FALSE)) {
+            $nt = rc_core_item_node_type($tkey);
+            if($nt != '') {
+              $info['node'][$nt]['display']['riot_tags_' . $pi->name] = $display;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function _riot_tags_entity_attach_plugins($type) {
+  $pis = cache_get(__FUNCTION__);
+  if(!$pis) {
+    $pis = array();
+    ctools_include('export');
+    foreach(ctools_export_crud_load_all('riot_tags_optionset') as $pi) {
+      if(!empty($pi->options[$pi->tag_plugin]['entity_attach'])) {
+        $pis[$pi->options[$pi->tag_plugin]['entity_attach']][] = $pi;
+      }
+    }
+    cache_set(__FUNCTION__, $pis, 'cache', CACHE_TEMPORARY);
+  } else {
+    $pis = $pis->data;
+  }
+  return $pis[$type] ?: array();
+}
+
+function riot_tags_entity_view_alter(&$build, $type) {
+  $plugins = _riot_tags_entity_attach_plugins($type);
+  foreach($plugins as $pi) {
+    $entity = $build['#entity'] ?: $build['#' . $type];
+    if ($entity) {
+      $eids = entity_extract_ids($type, $entity);
+      $build['riot_tags_' . $pi->name] = array(
+        '#theme' => 'riot_tag',
+        '#optionset' => $pi->name,
+        '#opts' => array(
+          'eid' => $eids[0]
+        ),
+        '#prefix' => '<h2>' . t($pi->title) . '</h2>'
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_libraries_info().
+ * @todo support compiler, debug (non-minified source)
+ */
+function riot_tags_libraries_info() {
+  $libraries = array();
+  $libraries['riotjs'] = array(
+    'name' => 'RiotJS',
+    'vendor url' => 'http://riotjs.com',
+    'download url' => 'https://github.com/riot/riot',
+    'version arguments' => array(
+      'file' => 'bower.json',
+      'pattern' => '/"version": (.+)/',
+    ),
+    'files' => array(
+      'js' => array(
+        'riot.min.js',
+      ),
+    ),
+    'dependencies' => array(
+      'riot_polyfills',
+    ),
+  );
+
+  $libraries['riot_polyfills'] = array(
+    'name' => 'RiotJS Polyfill Dependencies',
+    'vendor url' => 'http://bluetent.com',
+    'version' => '1.0',
+    'library path' => drupal_get_path('module', 'riot_tags') . '/js',
+    'files' => array(
+      'js' => array(
+        'polyfill.js'
+      ),
+    ),
+
+  );
+
+  $libraries['riot_subtag'] = array(
+    'name' => 'RiotJS Tag: Subtag',
+    'vendor url' => 'http://bluetent.com',
+    'version' => '1.0',
+    'library path' => drupal_get_path('module', 'riot_tags') . '/tags/subtag',
+    'files' => array(
+      'js' => array(
+        'subtag.js'
+      ),
+    ),
+    'dependencies' => array(
+      'riotjs',
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function riot_tags_menu() {
+  $items['riottags/%riot_tags_optionset'] = array(
+    'title callback' => 'riot_tags_optionset_title',
+    'title arguments' => array(1),
+    'description' => 'Page callback for riottags.',
+    'page callback' => 'riot_tags_optionset_page',
+    'page arguments' => array(1),
+    'access callback' => 'riot_tags_optionset_access',
+    'access arguments' => array(1, 'page'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['riottags/%riot_tags_optionset/view'] = array(
+    'title' => 'View',
+    'access callback' => TRUE,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'weight' => -1
+  );
+  $items['riottags/%riot_tags_optionset/edit'] = array(
+    'title' => 'Edit',
+    'access callback' => TRUE,
+    'page callback' => 'riot_tags_admin_edit_redirect',
+    'page arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+  return $items;
+
+}
+
+function riot_tags_admin_edit_redirect($optset) {
+  drupal_goto('admin/structure/riot-tags/list/' . $optset->name . '/edit', array('query' => array('destination' => 'riottags/' . $optset->name)));
+}
+
+function riot_tags_optionset_access($optset, $context) {
+  return $optset !== NULL;
+}
+
+/**
+ * Loads the specified optionset.
+ * @param $optionset_machine_name
+ * @return mixed
+ */
+function riot_tags_optionset_load($optionset_machine_name) {
+  ctools_include('export');
+  $optionset = ctools_export_crud_load('riot_tags_optionset', $optionset_machine_name);
+  return $optionset;
+}
+
+function riot_tags_optionset_page($optset) {
+  return array(
+    '#theme' => 'riot_tag',
+    '#optionset' => $optset->name
+  );
+}
+
+/**
+ * Page title callback for optionset page rendering
+ */
+function riot_tags_optionset_title($optset) {
+  return $optset->title;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function riot_tags_permission() {
+  return array(
+    'configure riot tags' => array(
+      'title' => t('Configure RiotJS tags'),
+      'description' => t('User can create/edit/delete RiotJS tag configurations.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_riot_tag_plugin_alter().
+ */
+function riot_tags_riot_tag_plugin_alter(&$plugins) {
+  foreach($plugins as $pin => &$pi) {
+    if($pin !== 'RiotTagsClassToggle') {
+      $pi['childTags'][] = 'RiotTagsClassToggle';
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function riot_tags_theme() {
+  $theme = array();
+  $path = drupal_get_path('module', 'riot_tags') . '/theme';
+  $theme['riot_tag'] = array(
+    'variables' => array(
+      'optionset' => NULL,
+      'opts' => NULL,
+    ),
+    'path' => $path,
+    'file' => 'riot_tags.theme.inc',
+  );
+  return $theme;
+}

@@ -1,0 +1,27 @@
+<?php
+/**
+ * Implements hook_libraries_info().
+ */
+function riot_tags_modal_libraries_info() {
+  $libraries = array();
+  $libraries['riot_tags_modal'] = array(
+    'name' => 'RiotJS Modal',
+    'vendor url' => 'http://bluetent.com/',
+    'download url' => 'https://bluetent.com/',
+    'library path' => drupal_get_path('module', 'riot_tags_modal') . '/mixin',
+    'version' => '1.0',
+    'files' => array(
+      'js' => array(
+        'modal.js',
+      ),
+      'css' => array(
+        'modal.css'
+      ),
+    ),
+    'dependencies' => array(
+      'riotjs',
+    ),
+  );
+
+  return $libraries;
+}

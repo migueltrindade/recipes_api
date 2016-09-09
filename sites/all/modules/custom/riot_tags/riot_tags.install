@@ -1,0 +1,55 @@
+<?php
+/**
+ * @file
+ * Installation hooks for RiotJS Tag.
+ */
+/**
+ * Implements hook_schema().
+ */
+function riot_tags_schema() {
+  $schema = array();
+
+  $schema['riot_tags_optionset'] = array(
+    'description' => 'Store RiotJS Tag Option Sets.',
+    'export' => array(
+      'key' => 'name',
+      'identifier' => 'preset',
+      'default hook' => 'riot_tags_default_optionsets',
+      'api' => array(
+        'owner' => 'riot_tags',
+        'api' => 'riot_tags_default_optionsets',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+    'fields' => array(
+      'name' => array(
+        'description' => 'The machine-readable option set name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'The human-readable title for this option set.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'tag_plugin' => array(
+        'description' => 'The RiotJS plugin to use for generating the tag.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'options' => array(
+        'description' => 'The options array.',
+        'type' => 'blob',
+        'size' => 'big',
+        'serialize' => TRUE,
+      ),
+    ),
+    'primary key' => array('name'),
+  );
+
+  return $schema;
+}

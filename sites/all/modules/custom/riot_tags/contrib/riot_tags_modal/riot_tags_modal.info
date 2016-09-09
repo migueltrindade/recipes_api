@@ -1,0 +1,4 @@
+name = Riot Tags Modal
+description = A simple modal mixin
+core = 7.x
+dependencies[] = riot_tags
